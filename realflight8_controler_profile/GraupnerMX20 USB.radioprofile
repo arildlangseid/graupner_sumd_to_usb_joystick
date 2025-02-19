@@ -22,7 +22,7 @@ Reverse=BOOL:No
 
 [DualRates5]
 Action=INT:0
-Input=INT:21
+Input=INT:23
 Reverse=BOOL:Yes
 
 [Main]
@@ -63,7 +63,7 @@ Reverse=BOOL:No
 
 [Smoke7]
 Action=INT:0
-Input=INT:23
+Input=INT:21
 Reverse=BOOL:Yes
 
 [TrimYawDec20]

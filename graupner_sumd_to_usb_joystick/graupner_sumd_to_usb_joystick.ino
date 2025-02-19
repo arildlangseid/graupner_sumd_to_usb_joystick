@@ -118,21 +118,21 @@ void setJoystickValues(uint8_t channelCounter) {
   if (channelCounter==THROTTLE) {
     int throttle = channel[THROTTLE];
     if (lastThrottle!=throttle) {
-      Joystick.setThrottle(throttle); // Throttle ch10
+      Joystick.setThrottle(throttle); // Throttle will appear on RealFlight ch10
       lastThrottle=throttle;
     }
   } else if (channelCounter==AILERON) {
     int aileron = channel[AILERON];
     if (lastAileron!=aileron) {
-      Joystick.setRyAxis(aileron); // YRotation ch2
+      Joystick.setRyAxis(aileron); // YRotation will appear on RealFlight ch2
       lastAileron=aileron;
     }
   } else if (channelCounter==ELEVATOR) {
     int elevator=channel[ELEVATOR];
     if (lastElevator!=elevator) {
-      Joystick.setRxAxis(elevator); // XRotation ch3
-//    Joystick.setYAxis(elevator); // Accelerator ch9
-//    Joystick.setRzAxis(elevator); // Rudder ch11
+      Joystick.setRxAxis(elevator); // XRotation will appear on RealFlight ch3
+//    Joystick.setYAxis(elevator); // Accelerator will appear on RealFlight ch9
+//    Joystick.setRzAxis(elevator); // Rudder will appear on RealFlight ch11
 
 //    Joystick.setAccelerator(elevator);
 //    Joystick.setBrake(elevator);
@@ -144,20 +144,20 @@ void setJoystickValues(uint8_t channelCounter) {
   } else if (channelCounter==RUDDER) {
     int rudder = channel[RUDDER];
     if (lastRudder!=rudder) {
-      Joystick.setZAxis(rudder); // ZAxis ch4
+      Joystick.setZAxis(rudder); // ZAxis will appear on RealFlight ch4
       lastRudder=rudder;
     }
   } else if (channelCounter==FLAP) {
     int flap = channel[FLAP];
     if (lastFlap!=flap) {
-      Joystick.setYAxis(flap); // Accelerator ch9
+      Joystick.setYAxis(flap); // Accelerator will appear on RealFlight ch9
       lastFlap=flap;
     }
   } else if (channelCounter==DUALRATE) {
     bool dualrate = (channel[DUALRATE] > 1500) ? true : false;
     if (lastDualRate != dualrate)
     {
-      Joystick.setButton(0, dualrate);
+      Joystick.setButton(3, dualrate);
       lastDualRate = dualrate;
     }
   } else if (channelCounter==SMOKE) {
@@ -177,7 +177,7 @@ void setJoystickValues(uint8_t channelCounter) {
     bool mode = (channel[MODE] > 1500) ? true : false;
     if (lastMode != mode)
     {
-      Joystick.setButton(3, mode);
+      Joystick.setButton(0, mode);
       lastMode = mode;
     }
   }
