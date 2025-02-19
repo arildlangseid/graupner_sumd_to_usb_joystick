@@ -1,5 +1,9 @@
 #include <Joystick.h>
 
+//
+// Connect HoTT receiver SUMD output to Serial-RX pin on Leonardo
+//
+
 // Uncomment for debug-printing
 //#define PRINT_DEBUG
 
@@ -14,21 +18,22 @@
 #define MODE 7
 #define RESET 9
 
+#define RANGE_INPUT_LOW 1000
+#define RANGE_INPUT_HIGH 2000
+
 #define SUMD_MAXCHAN 16
 #define SUMD_BUFFERSIZE SUMD_MAXCHAN*2+5
 
 static uint8_t sumd[SUMD_BUFFERSIZE]={0};
 
-//#ifdef PRINT_DEBUG
-  static int channel[SUMD_MAXCHAN];
-//#endif
+static int channel[SUMD_MAXCHAN];
 
 // Create the Joystick
 Joystick_ Joystick;
 
-// Constant that maps the physical pin to the joystick button.
-const int pinToButtonMap = 9;
-
+/*
+* setup()
+*/
 void setup() {
 #ifdef PRINT_DEBUG
   Serial.begin(115200);
@@ -37,47 +42,42 @@ void setup() {
   }
 #endif
 
-	// Initialize Button Pins
-	pinMode(pinToButtonMap, INPUT_PULLUP);
-
-#define INPUT_LOW 1000
-#define INPUT_HIGH 2000
-
 	// Initialize Joystick Library
 	Joystick.begin();
-  Joystick.setAcceleratorRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setBrakeRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setRudderRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setRxAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setRyAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setRzAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setXAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setYAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setZAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setSteeringRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setAcceleratorRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setThrottleRange(INPUT_LOW, INPUT_HIGH);
+  Joystick.setAcceleratorRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setBrakeRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setRudderRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setRxAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setRyAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setRzAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setXAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setYAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setZAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setSteeringRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setAcceleratorRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setThrottleRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
 
   // SUMD serial params 115200 baud, 8 bit, none parity, 1 stop bit
   Serial1.begin(115200);
 }
 
-// Last state of the switches
+// Last state of inputs and switches
 int lastThrottle = 1500;
 int lastAileron = 1500;
 int lastElevator = 1500;
 int lastRudder = 1500;
 int lastFlap = 1500;
-
 bool lastDualRate = false;
 bool lastSmoke = false;
 bool lastMode = false;
-
 bool lastReset = false;
 
 static uint8_t sumdIndex=0;
 static uint8_t sumdSize=0;
 static uint8_t channelCounter=0;
+/*
+* loop()
+*/
 void loop() {
   if (Serial1.available()) {
     int val = Serial1.read();
@@ -109,11 +109,11 @@ void loop() {
 #endif
     }
   }
-
-
-//	delay(50);
 }
 
+/*
+* setJoystickValues()
+*/
 void setJoystickValues(uint8_t channelCounter) {
   if (channelCounter==THROTTLE) {
     int throttle = channel[THROTTLE];
@@ -181,25 +181,13 @@ void setJoystickValues(uint8_t channelCounter) {
       lastMode = mode;
     }
   }
-
-
-// Uprøvde
-/*
-  Joystick.setAcceleratorRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setBrakeRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setRudderRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setRzAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setXAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setYAxisRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setSteeringRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setAcceleratorRange(INPUT_LOW, INPUT_HIGH);
-  Joystick.setThrottleRange(INPUT_LOW, INPUT_HIGH);
-*/
-
 }
 
 
 #ifdef PRINT_DEBUG
+/*
+* debug()
+*/
 void debug() {
   Serial.print(sumdSize);
   Serial.print("\t");
