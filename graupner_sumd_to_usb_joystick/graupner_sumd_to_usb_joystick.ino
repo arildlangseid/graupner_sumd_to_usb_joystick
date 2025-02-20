@@ -1,6 +1,9 @@
 #include <Joystick.h>
 
 //
+// Adapter to connect a Graupner SUMD receiver as a gamepad to USB on a PC
+// Made to be used with RealFlight 8
+//
 // Connect HoTT receiver SUMD output to Serial-RX pin on Leonardo
 //
 
@@ -18,18 +21,39 @@
 #define MODE 7
 #define RESET 9
 
+#define BUTTON_MODE 0 
+#define BUTTON_SMOKE 1
+#define BUTTON_RESET 2
+#define BUTTON_DUALRATE 3
+
 #define RANGE_INPUT_LOW 1000
 #define RANGE_INPUT_HIGH 2000
 
 #define SUMD_MAXCHAN 16
 #define SUMD_BUFFERSIZE SUMD_MAXCHAN*2+5
 
-static uint8_t sumd[SUMD_BUFFERSIZE]={0};
-
-static int channel[SUMD_MAXCHAN];
-
 // Create the Joystick
 Joystick_ Joystick;
+
+static uint8_t sumd[SUMD_BUFFERSIZE]={0};
+static int channel[SUMD_MAXCHAN];
+
+// Last state of inputs and switches
+static int lastThrottle = 1500;
+static int lastAileron = 1500;
+static int lastElevator = 1500;
+static int lastRudder = 1500;
+static int lastFlap = 1500;
+static bool lastDualRate = false;
+static bool lastSmoke = false;
+static bool lastMode = false;
+static bool lastReset = false;
+
+// For parsing SUMD protocol
+static uint8_t sumdIndex=0;
+static uint8_t sumdSize=0;
+static uint8_t channelCounter=0;
+
 
 /*
 * setup()
@@ -44,41 +68,27 @@ void setup() {
 
 	// Initialize Joystick Library
 	Joystick.begin();
-  Joystick.setAcceleratorRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setAcceleratorRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH); // Accelerator will appear on RealFlight ch9
   Joystick.setBrakeRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setRudderRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setRxAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setRyAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setRudderRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH); // Rudder will appear on RealFlight ch11
+  Joystick.setRxAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH); // XRotation will appear on RealFlight ch3
+  Joystick.setRyAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH); // YRotation will appear on RealFlight ch2
   Joystick.setRzAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setSteeringRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setThrottleRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH); // Throttle will appear on RealFlight ch10
   Joystick.setXAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
   Joystick.setYAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setZAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setSteeringRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setAcceleratorRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
-  Joystick.setThrottleRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH);
+  Joystick.setZAxisRange(RANGE_INPUT_LOW, RANGE_INPUT_HIGH); // ZAxis will appear on RealFlight ch4
 
   // SUMD serial params 115200 baud, 8 bit, none parity, 1 stop bit
   Serial1.begin(115200);
 }
 
-// Last state of inputs and switches
-int lastThrottle = 1500;
-int lastAileron = 1500;
-int lastElevator = 1500;
-int lastRudder = 1500;
-int lastFlap = 1500;
-bool lastDualRate = false;
-bool lastSmoke = false;
-bool lastMode = false;
-bool lastReset = false;
-
-static uint8_t sumdIndex=0;
-static uint8_t sumdSize=0;
-static uint8_t channelCounter=0;
 /*
 * loop()
 */
 void loop() {
+  // Read SUMD on serial-rx pin
   if (Serial1.available()) {
     int val = Serial1.read();
     // 0xA8 - start of frame
@@ -131,14 +141,6 @@ void setJoystickValues(uint8_t channelCounter) {
     int elevator=channel[ELEVATOR];
     if (lastElevator!=elevator) {
       Joystick.setRxAxis(elevator); // XRotation will appear on RealFlight ch3
-//    Joystick.setYAxis(elevator); // Accelerator will appear on RealFlight ch9
-//    Joystick.setRzAxis(elevator); // Rudder will appear on RealFlight ch11
-
-//    Joystick.setAccelerator(elevator);
-//    Joystick.setBrake(elevator);
-//    Joystick.setRudder(elevator);
-//    Joystick.setXAxis(aileron);
-//    Joystick.setSteering(elevator);
       lastElevator=elevator;
     }
   } else if (channelCounter==RUDDER) {
@@ -157,27 +159,27 @@ void setJoystickValues(uint8_t channelCounter) {
     bool dualrate = (channel[DUALRATE] > 1500) ? true : false;
     if (lastDualRate != dualrate)
     {
-      Joystick.setButton(3, dualrate);
+      Joystick.setButton(BUTTON_DUALRATE, dualrate);
       lastDualRate = dualrate;
     }
   } else if (channelCounter==SMOKE) {
     bool smoke = (channel[SMOKE] > 1500) ? true : false;
     if (lastSmoke != smoke)
     {
-      Joystick.setButton(1, smoke);
+      Joystick.setButton(BUTTON_SMOKE, smoke);
       lastSmoke = smoke;
     }
   } else if (channelCounter==RESET) {
     bool reset = (channel[RESET] > 1500) ? true : false;
     if (lastReset != reset) {
-      Joystick.setButton(2, reset);
+      Joystick.setButton(BUTTON_RESET, reset);
       lastReset = reset;
     }
   } else if (channelCounter==MODE) {
     bool mode = (channel[MODE] > 1500) ? true : false;
     if (lastMode != mode)
     {
-      Joystick.setButton(0, mode);
+      Joystick.setButton(BUTTON_MODE, mode);
       lastMode = mode;
     }
   }
